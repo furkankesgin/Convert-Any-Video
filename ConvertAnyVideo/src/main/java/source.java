@@ -8,15 +8,18 @@ public class source extends JFrame implements ActionListener {
 
     int pX, pY;
     JFileChooser fileChooser = new JFileChooser();
-    JComboBox comboExtentions;
+    static JComboBox comboExtentions;
+    static JProgressBar pbar = new JProgressBar();
     JTextField textInputFile = new JTextField();
-    JTextField textOutputFile = new JTextField();
+    static JTextField textOutputFile = new JTextField();
     JButton btnInputFile = new JButton("InputPath");
     JButton btnOutputFile = new JButton("OutputPath");
     ImageIcon iconAccept = new ImageIcon(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("Accept.png")));
     ImageIcon iconDeny = new ImageIcon(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("Deny.png")));
     static JButton btnConvert = new JButton();
     static JButton btnDeny = new JButton();
+    static JLabel label = new JLabel("");
+    static boolean btnDenyTrigger = false;
     ConverterThread converter;
     static boolean is_thread_running = false;
 
@@ -69,6 +72,7 @@ public class source extends JFrame implements ActionListener {
         add(btnConvert);
         add(btnDeny);
         add(comboExtentions);
+        add(label);
 
     }
 
@@ -122,8 +126,8 @@ public class source extends JFrame implements ActionListener {
 
         textInputFile.setEditable(false);
         textOutputFile.setEditable(false);
-        textInputFile.setFocusable(false);
-        textOutputFile.setFocusable(false);
+        textInputFile.setFocusable(true);
+        textOutputFile.setFocusable(true);
     }
 
     void comboboxBounds() {
@@ -158,11 +162,14 @@ public class source extends JFrame implements ActionListener {
         pbar.setMaximum(100);
         pbar.setBounds(110, 95, 110, 7);
         pbar.setForeground(Color.green);
-        pbar.setIndeterminate(false); //Progressbar will stop moving
+//        pbar.setIndeterminate(false); //Progressbar will stop moving
+
+        label.setBounds(155,95,150,30);
 
     }
 
-    static JProgressBar pbar = new JProgressBar();
+
+
 
 
     void showLoading() {
@@ -183,38 +190,61 @@ public class source extends JFrame implements ActionListener {
         }
     }
 
+//    void startProgress(){
+//        ProgressHandlerThread p = new ProgressHandlerThread();
+//        p.start();
+//    }
+    File selectedFile;
 
     @Override
     public void actionPerformed(ActionEvent e) {
+
         if (e.getSource() == btnConvert) {
-            System.out.println("."+textOutputFile.getText()+".");
             if (textOutputFile.getText().isEmpty()) {
                 textOutputFile.setText(fileWithPath(textInputFile.getText(),".",false));
             }
+            else{
+                System.out.println(textOutputFile.getText());
+            }
+
+
             btnConvert.setEnabled(false);
             btnDeny.setEnabled(true);
             showLoading();
 
-            source.pbar.setIndeterminate(true); //progressbar will move infinitely right to left
+
+//            source.pbar.setIndeterminate(true); //progressbar will move infinitely right to left
             converter = new ConverterThread(textInputFile.getText(), textOutputFile.getText(), comboExtentions.getSelectedItem().toString());
             converter.setDaemon(true);
             converter.start();
+//            ProgressHandlerThread p = new ProgressHandlerThread();
+//            p.start();
         }
         if(e.getSource() == btnDeny){
+            btnDenyTrigger=true;
             is_thread_running=false;
             btnDeny.setEnabled(false);
+
+
         }
 
-        String videoFormats[] = {".mov",".webm",".mpg",".mp2", ".mpeg", ".mpe", ".mpv",".ogg",".mp4",".m4p", ".m4v",".avi",".wmw", ".mov",".qt",".flv", ".swf", ".avchd"};
+        String videoFormats[] = {".mov",".webm",".mpg",".mp2", ".mpeg",
+                ".mpe", ".mpv",".ogg",".mp4",".m4p", ".m4v",".avi",".wmw",
+                ".mov",".qt",".ts",".flv", ".swf", ".avchd", ".m4a", ".f4v",".m4b",
+                ".m4r", ".f4b",".3gp", ".3gp2", ".3g2", ".3gpp", ".3gpp2",".ogg",
+                ".oga", ".ogv", ".ogx",".wmv", ".wma", ".asf",".hdv",".mxf",".op1a",
+                ".op-atom", ".mpeg-ts", ".wav", ".lxf", ".gxf", ".vob", ".mkv", ".flac"};
 
-        if (e.getSource() == btnInputFile) {
+    if (e.getSource() == btnInputFile) {
             fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
             fileChooser.setFileSelectionMode(JFileChooser.APPROVE_OPTION);
             int option = fileChooser.showOpenDialog(this);
             if (option == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                textInputFile.setText(selectedFile.toString().toLowerCase());
-                if (!textInputFile.getText().isEmpty()) {
+                selectedFile = fileChooser.getSelectedFile();
+                textInputFile.setText(selectedFile.toString());
+//                textInputFile.setText(textInputFile.getText().replaceAll("\\s",""));
+//                textInputFile.setText(textInputFile.getText().replaceAll(",",""));
+                if (!(textInputFile.getText().isEmpty())) {
 
                     for(int i = 0; i < videoFormats.length; i++){
                         if(fileWithPath(textInputFile.getText(), ".", true).equals(videoFormats[i])){
